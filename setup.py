@@ -1,10 +1,10 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='src',
+    name='expressvpn_explorer',
     packages=find_packages(),
-    version='0.1.0',
-    description='A short description of the project.',
-    author='Your name (or your organization/company/team)',
+    version='1',
+    description='Find ExpressVPN servers for connection.',
+    author='Damon',
     license='MIT',
 )
