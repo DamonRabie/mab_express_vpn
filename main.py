@@ -59,7 +59,7 @@ def run_bandit_until_success(
         vpn_connector.connect(action)
         if vpn_connector.is_connected():
             bandit.update(action, 1)
-            logging.info(f"Successfully connected to VPN using arm: {action}")
+            logging.info(f"Successfully connected to VPN using server: {action}")
             break
         else:
             bandit.update(action, 0)
