@@ -1,30 +1,77 @@
-Data Science Project Template
-==============================
+# ExpressVPN Bandit Explorer
 
-This is an adapted version of the Cookiecutter Data Science project template with some structural changes and the
-inclusion of custom scripts in the project.
+ExpressVPN Bandit Explorer is a Python project that uses the Multi-Armed Bandit algorithm to intelligently select a VPN server for a stable and successful connection.
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Features](#features)
+- [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Introduction
+
+This project implements a Multi-Armed Bandit algorithm to optimize the selection of VPN servers based on historical performance. The bandit explores different servers, learns from past experiences, and adapts its strategy to maximize the chances of a successful and stable VPN connection.
+
+## Features
+
+- Multi-Armed Bandit algorithm for intelligent VPN server selection.
+- Integration with ExpressVPN for connecting to and disconnecting from servers.
+- Logging for monitoring the bandit's decisions and VPN connection status.
+- Persistence of bandit model to save and load the learning state.
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.x
+- ExpressVPN command-line tool installed and configured.
+
+### Installation
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/DamonRabie/mab_express_vpn.git
+    ```
+
+2. Install dependencies:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+## Usage
+
+1. Run the `main.py` script:
+
+    ```bash
+    python main.py
+    ```
+
+2. The bandit algorithm will iteratively select VPN servers, attempt connections, and learn from the results until a successful connection is established.
+
+## Configuration
+
+- The project can be configured using command-line arguments or by modifying constants in the `main.py` script.
+- Customize logging levels, file paths, and other parameters as needed.
 
 Project Organization
 ------------
 
     ├── LICENSE
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
     ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
     │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
-    │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
+    ├── models             <- Store model pickle file
     │
     ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
-    │
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
+    │                         and a short `-` delimited description, e.g.
+    │                         `1.0-initial-data-exploration`.
     │
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
     │   └── figures        <- Generated graphics and figures to be used in reporting
@@ -33,32 +80,23 @@ Project Organization
     │                         generated with `pip freeze > requirements.txt`
     │
     ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
-    │   ├── db_connectors  <- Scripts to connect to different databases
-    │   │   └── Clickhouse.py
-    │   │   └── SqlServer.py
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │
-    │   ├── metrics        <- Scripts to calculate customized metrics
-    │   │   └── Classification.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make predictions.
-    │   │   │           Plus modules for specific model types
-    │   │   ├── ChatGpt.py
-    │   │   └── Prophet.py
-    │   │
-    │   ├── preprocess     <- Scripts to perform prepare data for modeling
-    │   │   └── EmailText.py
-    │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
     │
-    └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
+    └── expressvpn_explorer      <- Source code for use in this project.
+        ├── __init__.py    <- Makes src a Python module
+        │
+        ├── connector      
+        │   └── expressvpn.py   <- VPNConnector class for handling VPN connections using ExpressVPN
+        │
+        ├── models
+        │   └── bandit.py   <- Implementation of the Multi-Armed Bandit algorithm
+        │
+        ├── visualization  <- Scripts to create exploratory and results oriented visualizations
+        │
+        └── utils.py       <- General utility functions
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 --------
 
