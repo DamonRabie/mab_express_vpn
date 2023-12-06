@@ -3,8 +3,6 @@
 import logging
 import subprocess
 
-from ..utils import check_internet_connection
-
 
 class VPNConnector:
     """Class for handling VPN connections."""
@@ -37,7 +35,7 @@ class VPNConnector:
         """Check if the VPN connection is successful."""
         try:
             output = subprocess.run("expressvpn status", shell=True, check=True, capture_output=True)
-            return 'connected to' in str(output.stdout.lower()) and check_internet_connection()
+            return 'connected to' in str(output.stdout.lower())
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Error while checking connection status: {e}")
             return False
