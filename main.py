@@ -7,6 +7,7 @@ import numpy as np
 
 from expressvpn_explorer.connector.expressvpn import VPNConnector
 from expressvpn_explorer.models.bandit import MultiArmedBandit
+from expressvpn_explorer.utils import check_internet_connection
 
 MODEL_DIR = "models"
 MODEL_FILE = os.path.join(MODEL_DIR, "explorer_mab_model.pkl")
@@ -58,9 +59,13 @@ def run_bandit_until_success(
 
         vpn_connector.connect(action)
         if vpn_connector.is_connected():
-            bandit.update(action, 1)
-            logging.info(f"Successfully connected to VPN using server: {action}")
-            break
+            if check_internet_connection():
+                bandit.update(action, 1)
+                logging.info(f"Successfully connected to VPN using server: {action}")
+                break
+            else:
+                bandit.update(action, 0.5)
+                logging.info(f"Successfully connected but no internet connection using server: {action}")
         else:
             bandit.update(action, 0)
 
