@@ -2,8 +2,7 @@
 import logging
 import os
 import pickle
-
-import numpy as np
+from logging.handlers import RotatingFileHandler
 
 from expressvpn_explorer.connector.expressvpn import VPNConnector
 from expressvpn_explorer.models.bandit import MultiArmedBandit
@@ -11,11 +10,36 @@ from expressvpn_explorer.utils import check_internet_connection
 
 MODEL_DIR = "models"
 MODEL_FILE = os.path.join(MODEL_DIR, "explorer_mab_model.pkl")
+LOG_FILE = 'vpn_explorer.log'
 
 
 def initialize_logging():
-    """Initialize logging configuration."""
-    logging.basicConfig(level=logging.INFO)
+    """Initialize logging configuration to overwrite log file each run."""
+    # Ensure the log directory exists (if using a subdirectory)
+    os.makedirs(os.path.dirname(LOG_FILE) or '.', exist_ok=True)
+
+    # Clear any existing log handlers
+    logging.root.handlers = []
+
+    # Set up handlers
+    handlers = [
+        RotatingFileHandler(
+            LOG_FILE,
+            mode='a',  # Changed from 'w' to 'a' (append)
+            maxBytes=5 * 1024 * 1024,
+            backupCount=0
+        ),
+        logging.StreamHandler()
+    ]
+
+    # Basic config with handlers
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=handlers
+    )
+
+    logging.info("Initialized logging")
 
 
 def save_model(model: MultiArmedBandit):
@@ -30,21 +54,24 @@ def save_model(model: MultiArmedBandit):
         logging.error(f"Error while saving model: {e}")
 
 
-def load_model(vpn_connector: VPNConnector) -> MultiArmedBandit:
+def load_model(server_list: list) -> MultiArmedBandit:
     """Load the MultiArmedBandit model from a file or create a new one."""
     try:
         if os.path.exists(MODEL_FILE):
             logging.info("Loading existing MultiArmedBandit model from file.")
             with open(MODEL_FILE, "rb") as file:
-                return pickle.load(file)
+                model = pickle.load(file)
+
+            model.activate(server_list)
+            return model
+
         else:
             logging.info("Creating a new MultiArmedBandit model.")
-            arm_labels = vpn_connector.fetch_server_list()
-            true_rewards = dict(zip(arm_labels, np.zeros(len(arm_labels))))
-            return MultiArmedBandit(arm_labels, true_rewards)
+            return MultiArmedBandit(server_list)
+
     except Exception as e:
         logging.error(f"Error while loading model: {e}")
-        return MultiArmedBandit([], {})
+        raise f"Error while loading model: {e}"
 
 
 def run_bandit_until_success(
@@ -60,11 +87,11 @@ def run_bandit_until_success(
         vpn_connector.connect(action)
         if vpn_connector.is_connected():
             if check_internet_connection():
-                bandit.update(action, 1)
+                bandit.update(action, 3)
                 logging.info(f"Successfully connected to VPN using server: {action}")
                 break
             else:
-                bandit.update(action, 0.5)
+                bandit.update(action, 1)
                 logging.info(f"Successfully connected but no internet connection using server: {action}")
         else:
             bandit.update(action, 0)
@@ -77,7 +104,9 @@ def run_bandit_until_success(
 if __name__ == "__main__":
     initialize_logging()
 
-    expressvpn = VPNConnector()
-    bandit_model = load_model(expressvpn)
+    express_vpn = VPNConnector()
+    all_servers = express_vpn.fetch_server_list()
 
-    run_bandit_until_success(bandit_model, vpn_connector=expressvpn)
+    bandit_model = load_model(all_servers)
+
+    run_bandit_until_success(bandit_model, vpn_connector=express_vpn, max_checks=1000)

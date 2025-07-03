@@ -1,29 +1,40 @@
 # expressvpn_explorer/models/bandit.py
 
-import logging
-
 import numpy as np
 
 
 class MultiArmedBandit:
     """Class for implementing a Multi-Armed Bandit algorithm."""
 
-    def __init__(self, arm_labels, true_rewards):
+    def __init__(self, arm_labels):
         """
         Initialize the MultiArmedBandit instance.
 
         Parameters:
         - arm_labels (list): List of labels for each arm.
-        - true_rewards (dict): Dictionary mapping arm labels to their true rewards.
+        - action_values (dict): Dictionary mapping arm labels to their rewards.
         """
         self.arm_labels = arm_labels
-        self.num_arms = len(arm_labels)
-        self.true_rewards = true_rewards
         self.action_counts = {label: 0 for label in arm_labels}
         self.action_values = {label: 0.0 for label in arm_labels}
+        self.active_arm = {label: 1 for label in arm_labels}
         self.timestep = 0
 
-    def add_arm(self, arm_label, true_reward):
+    def activate(self, arm_labels):
+        """
+        Activate a specific arm label in the MultiArmedBandit instance.
+        First deselect all and then select the ones in arms_labels.
+        """
+
+        self.active_arm = {label: 0 for label in self.arm_labels}
+
+        for arm in arm_labels:
+            if arm not in self.arm_labels:
+                self.add_arm(arm)
+
+            self.active_arm[arm] = 1
+
+    def add_arm(self, arm_label):
         """
         Add a new arm to the bandit.
 
@@ -31,13 +42,10 @@ class MultiArmedBandit:
         - arm_label (str): Label for the new arm.
         - true_reward (float): True reward for the new arm.
         """
-        if arm_label not in self.arm_labels:
-            self.arm_labels.append(arm_label)
-            self.true_rewards[arm_label] = true_reward
-            self.action_counts[arm_label] = 0
-            self.action_values[arm_label] = 0.0
-        else:
-            logging.warning(f"Arm '{arm_label}' already exists in the bandit.")
+        self.arm_labels.append(arm_label)
+        self.action_counts[arm_label] = 0
+        self.action_values[arm_label] = 0
+        self.active_arm[arm_label] = 0
 
     def select_action(self):
         """
@@ -46,12 +54,17 @@ class MultiArmedBandit:
         Returns:
         - str: Selected action label.
         """
-        ucb_values = {
-            label: value + np.sqrt(2 * np.log(self.timestep + 1) / (self.action_counts[label] + 1e-6))
-            for label, value in self.action_values.items()
-        }
 
-        action = max(ucb_values, key=ucb_values.get)
+        max_ucb_value = -10000
+        action = None
+
+        for label, value in self.action_values.items():
+            if self.active_arm[label] == 1:
+                this_value = value + np.sqrt(5 * np.log(self.timestep + 1) / (self.action_counts[label] + 1e-6))
+                if this_value > max_ucb_value:
+                    max_ucb_value = this_value
+                    action = label
+
         return action
 
     def update(self, action, reward):
